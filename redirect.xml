@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<data> 
+  <rule from="#/from/(.*)#" to="/to/$1" code="301"/>    
+</data> 
