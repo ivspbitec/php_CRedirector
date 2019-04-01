@@ -1,7 +1,7 @@
 <?
 /** Перенаправление по страницам по списку 
  * 
- * @version 1.2
+ * @version 1.3
  * 
  * \spbitec\CRedirector::redirectFromFileXML('../../redirect.xml');
  * 
@@ -114,10 +114,10 @@ class CRedirector{
       if (self::$debug){
          echo 'CRedirector::redirect - Redirected to <b>'.$uri.'</b>; HTTP status code - <b>'.$code.'</b>';    
       }else{      
+         header("Status: $code Found");
          header("Location: $uri",true,$code);         
       }
       exit;
    }
 
 }
-
