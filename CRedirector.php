@@ -1,9 +1,10 @@
 <?
 /** Перенаправление по страницам по списку 
  * 
- * @version 1.3
+ * @version 1.4
  * 
  * \spbitec\CRedirector::redirectFromFileXML('../../redirect.xml');
+ * \spbitec\CRedirector::redirectFromFileXML(['../../redirect.xml','../../redirect.xml']);
  * 
  * Example: 
  * <?xml version="1.0"?>
@@ -18,8 +19,8 @@
 namespace spbitec;
 
 class CRedirector{
-   private static $debug=false;
-   private static $cache=true; //Кеширование правил в сессии
+   private static $debug=false;	//Тестирование
+   private static $cache=true; 	//Кеширование правил в сессии
 
    /*----- Public --------------------- */
    
@@ -27,27 +28,57 @@ class CRedirector{
       if ($value) self::$debug=true;      
    }   
 
+   public static function debugEcho($message,$exit=null){    
+      if (self::$debug){
+         echo	"<pre>".$message."</pre>";    
+         if ($exit) exit;
+      }     
+   }   
+
    public static function cache($value){    
       self::$cache=($value)?true:false;      
    }   
 
-   public static function redirectFromFileXML($file){    
+   public static function redirectFromFileXML($file){
+   	$files=[];
+   	if ($file && !is_array($file)){
+      	$files[]=$file;
+      }elseif($file && is_array($file)){
+      	$files=$file;
+      }else{
+         throw new \Exception('CRedirector::redirectFromFileXML - File defined'."\n");
+      }
+      
+      foreach($files as $file){
+      	self::processFile($file);
+      }
+      
+      self::debugEcho('CRedirector::redirectFromFileXML - Redirects complete',1);    
+   }
+   
+   
+ 	/*----- Private --------------------- */
+   
+   private static function processFile($file){    
    	if (!file_exists($file)){
-      	throw new \Exception('CRedirector::redirectFromFileXML - File not found '.$file);
+      	throw new \Exception('CRedirector::processFile - File not found '.$file);
       };
+
+      self::debugEcho('CRedirector::processFile - Start redirect from file '.$file);             
+      
       
       $xml=false;
       $xml_data=null;
    
       if (self::$cache){
       	if (session_status()==PHP_SESSION_DISABLED){
-         	throw new \Exception('CRedirector::redirectFromFileXML - No session');
+         	throw new \Exception('CRedirector::processFile - No session');
          }elseif (session_status()==PHP_SESSION_NONE){
-         	throw new \Exception('CRedirector::redirectFromFileXML - No session add session_start(); before start redirect');
+         	throw new \Exception('CRedirector::processFile - No session add session_start(); before start redirect');
          }
          
-         $lastCacheKey=md5('\spbitec\CRedirector::redirectFromFileXMLKey');
-         $cacheKey=md5('\spbitec\CRedirector::redirectFromFileXML '.filemtime($file));
+         $lastCacheKey=md5('\spbitec\CRedirector::processFile'.$file);
+         $cacheKey=md5('\spbitec\CRedirector::processFile'.$file.filemtime($file));
          
          if (!isset($_SESSION[$cacheKey])){          	        
          	if ($_SESSION[$_SESSION[$lastCacheKey]]){
@@ -55,6 +86,7 @@ class CRedirector{
             }
             $_SESSION[$lastCacheKey]=$cacheKey;
          }else{
+            self::debugEcho('CRedirector::processFile - Used Cache');             
          	$xml_data = $_SESSION[$cacheKey];
          }                         
       }
@@ -75,28 +107,34 @@ class CRedirector{
        	$_SESSION[$cacheKey]=$xml_data;
        }      
 
-
+ 
       foreach($xml_data as $data){ 
          $from=$data['from'];
          $to=$data['to'];               
          $code=$data['code'];    
+         $timestamp=$data['timestamp'];    
 
-         if (!$to || !$from) {
+         if (!$from) {
             continue;         
          }
          
          $uri=$_SERVER['REQUEST_URI'];
-
-         self::redirect(self::replace($uri,$from,$to),$code);
+         if (self::search($uri,$from)===1){	
+            $replaceUri=self::replace($uri,$from,$to);
+            self::redirect($replaceUri?$replaceUri:true,$code);
+            break;
+         }
       } 
-      if (self::$debug){
-         echo 'CRedirector::redirectFromFileXML - No redirect found';    
-         exit;
-      }
+      
+      self::debugEcho("CRedirector::processFile - No redirect found in $file");    
    }   
 
-	/*----- Private --------------------- */
 
+
+   private static function search($uri,$from){
+   	return preg_match($from,$uri);
+   }
+   
    private static function replace($uri,$from,$to){
    	$ret=preg_replace($from,$to,$uri);
       if ($ret && $ret!=$uri){
@@ -105,17 +143,15 @@ class CRedirector{
       return false;
    }
 
-   private static function redirect($uri,$code=null){   
-      if (!$uri){ 
-      	return false;
-      }      
-      $code=$code?$code:'301';
-      
+   private static function redirect($uri,$code=null){
+      $code=$code?$code:'301';      
       if (self::$debug){
-         echo 'CRedirector::redirect - Redirected to <b>'.$uri.'</b>; HTTP status code - <b>'.$code.'</b>';    
-      }else{      
+         self::debugEcho('CRedirector::redirect - Redirected to <b>'.$uri.'</b>; HTTP status code - <b>'.$code.'</b>');    
+      }else{
          header("Status: $code Found");
-         header("Location: $uri",true,$code);         
+         if ($uri){
+            header("Location: $uri",true,$code);         
+         }
       }
       exit;
    }
