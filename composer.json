@@ -1,6 +1,6 @@
 {
   "name": "ivspbitec/php_CRedirector",
-  "type": "library",
+  "type": "php-class",
   "description": "spbitec.ru CRedirector",
   "keywords": [],
   "homepage": "https://spbitec.ru",
@@ -14,5 +14,10 @@
           "name": "IV",
          "email": "iv@spbitec.ru"        
          }
-  ]
+  ],
+  "autoload": {
+      "psr-4": {
+          "spbitec\\CRedirector\\": ""
+      }
+  }
 }
