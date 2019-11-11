@@ -3,7 +3,7 @@ Redirect urls by regular expression based on XML list with cache
 
 **Перенаправление по страницам по списку 
  
-@version 1.2
+@version 1.4
   
   \spbitec\CRedirector::redirectFromFileXML('../../redirect.xml');
   
