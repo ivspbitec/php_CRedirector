@@ -1,0 +1,18 @@
+{
+  "name": "spbitec/CRedirector",
+  "type": "library",
+  "description": "spbitec.ru CRedirector",
+  "keywords": [],
+  "homepage": "https://spbitec.ru",
+  "license": "MIT",
+  "authors": [
+      {
+          "name": "spbitec ltd.",
+          "email": "info@spbitec.ru"
+      },
+      {
+          "name": "IV",
+         "email": "iv@spbitec.ru"        
+         }
+  ]
+}
